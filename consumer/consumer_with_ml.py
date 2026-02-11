@@ -1,22 +1,42 @@
-from kafka import KafkaConsumer
 import json
+import logging
+
 import joblib
 import pandas as pd
+from kafka import KafkaConsumer
 
-model = joblib.load("fraud_model.pkl")
-
-consumer = KafkaConsumer(
-    "transactions",
-    bootstrap_servers='localhost:9092',
-    value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+from common.config import (
+    CONSUMER_AUTO_OFFSET_RESET,
+    CONSUMER_GROUP_ID,
+    KAFKA_BOOTSTRAP_SERVERS,
+    KAFKA_TOPIC_TRANSACTIONS,
+    MODEL_PATH,
 )
+from common.logging_utils import setup_logging
 
-for message in consumer:
-    data = message.value
-    df = pd.DataFrame([data])
+logger = logging.getLogger("consumer_with_ml")
 
-    prediction = model.predict(df[["amount"]])[0]
 
-    data["fraud_prediction"] = int(prediction)
+def main() -> None:
+    setup_logging()
+    model = joblib.load(MODEL_PATH)
 
-    print("Processado:", data)
+    consumer = KafkaConsumer(
+        KAFKA_TOPIC_TRANSACTIONS,
+        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+        value_deserializer=lambda m: json.loads(m.decode("utf-8")),
+        group_id=CONSUMER_GROUP_ID,
+        auto_offset_reset=CONSUMER_AUTO_OFFSET_RESET,
+    )
+
+    for message in consumer:
+        data = message.value
+        df = pd.DataFrame([data])
+        prediction = model.predict(df[["amount"]])[0]
+
+        data["fraud_prediction"] = int(prediction)
+        logger.info("Processado: %s", data)
+
+
+if __name__ == "__main__":
+    main()

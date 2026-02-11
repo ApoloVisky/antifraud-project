@@ -49,3 +49,20 @@ docker-compose up -d
 python producer/producer.py
 python consumer/consumer_save.py
 streamlit run dashboard/app.py
+```
+
+## 🧭 Próximos passos para evoluir o projeto
+
+Foi criado um roadmap prático com melhorias de curto, médio e longo prazo para deixar o projeto mais robusto e profissional:
+
+- [Roadmap profissional](docs/ROADMAP_PROFISSIONAL.md)
+- [Próximo passo de escala (plano de 2 semanas)](docs/PROXIMO_PASSO_ESCALA.md)
+
+
+## 🔧 Configuração com variáveis de ambiente
+
+```bash
+cp .env.example .env
+```
+
+Agora o producer e consumers leem configurações do arquivo `.env` (Kafka, paths, retries e consumer group), além de utilizarem logging estruturado.
